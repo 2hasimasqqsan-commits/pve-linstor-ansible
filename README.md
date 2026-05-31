@@ -12,12 +12,12 @@ The lab is designed to verify a two-node Proxmox VE cluster with LINSTOR/DRBD st
 
 The main purpose of this project is to demonstrate:
 
--Proxmox VE cluster automation
--LINSTOR and DRBD-backed shared storage configuration
--QDevice-based quorum support
--Proxmox VE HA resource verification
--VM disk placement on LINSTOR-backed storage
--Infrastructure automation using Ansible roles
+・Proxmox VE cluster automation
+・LINSTOR and DRBD-backed shared storage configuration
+・QDevice-based quorum support
+・Proxmox VE HA resource verification
+・VM disk placement on LINSTOR-backed storage
+・Infrastructure automation using Ansible roles
 
 ## Architecture
 
