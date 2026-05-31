@@ -12,12 +12,12 @@ The lab is designed to verify a two-node Proxmox VE cluster with LINSTOR/DRBD st
 
 The main purpose of this project is to demonstrate:
 
-・Proxmox VE cluster automation
-・LINSTOR and DRBD-backed shared storage configuration
-・QDevice-based quorum support
-・Proxmox VE HA resource verification
-・VM disk placement on LINSTOR-backed storage
-・Infrastructure automation using Ansible roles
+- Proxmox VE cluster automation
+- LINSTOR and DRBD-backed shared storage configuration
+- QDevice-based quorum support
+- Proxmox VE HA resource verification
+- VM disk placement on LINSTOR-backed storage
+- Infrastructure automation using Ansible roles
 
 ## Architecture
 
@@ -47,28 +47,29 @@ qnetd01
 | QDevice node | qnetd01 | 192.168.56.223 |
 
 ## Main Components
--Proxmox VE
--LINSTOR
--DRBD
--QDevice / QNetd
--Proxmox VE HA Manager
--Ansible
--LINBIT repository
--LINSTOR-backed Proxmox VE storage
+- Proxmox VE
+- LINSTOR
+- DRBD
+- QDevice / QNetd
+- Proxmox VE HA Manager
+- Ansible
+- LINBIT repository
+- LINSTOR-backed Proxmox VE storage
 
 ## Main Features
--Proxmox VE repository configuration
--LINBIT repository configuration
--LINSTOR package installation
--LINSTOR controller / satellite setup
--DRBD-backed storage configuration
--Proxmox VE cluster setup
--QDevice quorum support
--Proxmox VE storage integration
--Basic verification tasks
--Example inventory and variable files for public use
+- Proxmox VE repository configuration
+- LINBIT repository configuration
+- LINSTOR package installation
+- LINSTOR controller / satellite setup
+- DRBD-backed storage configuration
+- Proxmox VE cluster setup
+- QDevice quorum support
+- Proxmox VE storage integration
+- Basic verification tasks
+- Example inventory and variable files for public use
 
 ## Directory Structure
+```text
 pve-linstor-ansible/
 ├── ansible.cfg
 ├── inventory.ini.example
@@ -86,15 +87,16 @@ pve-linstor-ansible/
 │   ├── qdevice/
 │   └── verify/
 └── site.yml
+```
 
 ## Requirements
--Ansible control node
--Two Proxmox VE nodes
--One QDevice / QNetd node
--SSH access from the Ansible control node
--Sudo privileges for the Ansible user
--Network connectivity between all lab nodes
--Additional storage devices for DRBD/LINSTOR testing
+- Ansible control node
+- Two Proxmox VE nodes
+- One QDevice / QNetd node
+- SSH access from the Ansible control node
+- Sudo privileges for the Ansible user
+- Network connectivity between all lab nodes
+- Additional storage devices for DRBD/LINSTOR testing
 
 ## Usage
 
@@ -147,14 +149,14 @@ Screenshots and verification results will be added later.
 
 Planned verification materials:
 
--Proxmox VE cluster GUI
--Proxmox VE HA status
--LINSTOR resource list
--DRBD Primary / Secondary status
--QDevice quorum status
--VM disk running on LINSTOR-backed storage
--Auto failover test screenshots
--Auto failover demo video
+- Proxmox VE cluster GUI
+- Proxmox VE HA status
+- LINSTOR resource list
+- DRBD Primary / Secondary status
+- QDevice quorum status
+- VM disk running on LINSTOR-backed storage
+- Auto failover test screenshots
+- Auto failover demo video
 
 ## Security Notes
 
@@ -162,14 +164,14 @@ Do not publish real environment values.
 
 Before publishing this repository, make sure the following information is not included:
 
--Real IP addresses
--Real hostnames
--Passwords
--API tokens
--SSH private keys
--Vault password files
--Internal domain names
--Customer or company confidential information
+- Real IP addresses
+- Real hostnames
+- Passwords
+- API tokens
+- SSH private keys
+- Vault password files
+- Internal domain names
+- Customer or company confidential information
 
 Use example values such as:
 
