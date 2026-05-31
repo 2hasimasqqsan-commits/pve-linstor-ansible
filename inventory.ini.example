@@ -1,0 +1,18 @@
+[pve_nodes]
+pve-linstor01 ansible_host=192.168.56.221
+pve-linstor02 ansible_host=192.168.56.222
+
+[qdevice]
+qnetd01 ansible_host=192.168.56.223
+
+[linstor_controller]
+pve-linstor01
+
+[linstor_satellites]
+pve-linstor01
+pve-linstor02
+
+[all:vars]
+ansible_user=ansible
+ansible_become=true
+ansible_become_method=sudo

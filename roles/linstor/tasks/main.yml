@@ -1,0 +1,74 @@
+---
+- name: Install DRBD utilities, LINSTOR and Proxmox plugin packages on Proxmox nodes
+  ansible.builtin.apt:
+    name:
+      - proxmox-default-headers
+      - drbd-utils
+      - linstor-satellite
+      - linstor-client
+      - linstor-proxmox
+      - drbd-dkms
+      - dkms
+      - build-essential
+      - proxmox-default-headers
+    state: present
+    update_cache: true
+  when: inventory_hostname in groups['pve_nodes']
+
+- name: Install LINSTOR controller on controller node
+  ansible.builtin.apt:
+    name:
+      - linstor-controller
+    state: present
+    update_cache: true
+  when: inventory_hostname == linstor_controller_node
+
+- name: Enable and start LINSTOR controller
+  ansible.builtin.systemd:
+    name: linstor-controller
+    enabled: true
+    state: started
+  when: inventory_hostname == linstor_controller_node
+
+- name: Enable and start LINSTOR satellite
+  ansible.builtin.systemd:
+    name: linstor-satellite
+    enabled: true
+    state: started
+  when: inventory_hostname in groups['pve_nodes']
+
+- name: Check DRBD kernel module availability
+  ansible.builtin.command: modinfo drbd
+  register: drbd_modinfo
+  changed_when: false
+  failed_when: false
+  when: inventory_hostname in groups['pve_nodes']
+
+- name: Show DRBD kernel module availability
+  ansible.builtin.debug:
+    msg: "{{ inventory_hostname }} drbd_module_available={{ drbd_modinfo.rc == 0 }}"
+  when: inventory_hostname in groups['pve_nodes']
+
+- name: Check LINSTOR controller status
+  ansible.builtin.command: systemctl is-active linstor-controller
+  register: linstor_controller_status
+  changed_when: false
+  failed_when: false
+  when: inventory_hostname == linstor_controller_node
+
+- name: Show LINSTOR controller status
+  ansible.builtin.debug:
+    msg: "{{ inventory_hostname }} linstor-controller={{ linstor_controller_status.stdout }}"
+  when: inventory_hostname == linstor_controller_node
+
+- name: Check LINSTOR satellite status
+  ansible.builtin.command: systemctl is-active linstor-satellite
+  register: linstor_satellite_status
+  changed_when: false
+  failed_when: false
+  when: inventory_hostname in groups['pve_nodes']
+
+- name: Show LINSTOR satellite status
+  ansible.builtin.debug:
+    msg: "{{ inventory_hostname }} linstor-satellite={{ linstor_satellite_status.stdout }}"
+  when: inventory_hostname in groups['pve_nodes']

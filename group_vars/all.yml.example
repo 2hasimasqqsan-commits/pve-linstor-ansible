@@ -1,0 +1,61 @@
+---
+timezone: "Asia/Tokyo"
+
+cluster_name: "pve-linstor-cluster"
+
+hosts_entries:
+  - ip: "192.168.56.221"
+    names: "pve-linstor01"
+  - ip: "192.168.56.222"
+    names: "pve-linstor02"
+  - ip: "192.168.56.223"
+    names: "qnetd01"
+
+pve_no_subscription_repo: "deb http://download.proxmox.com/debian/pve bookworm pve-no-subscription"
+
+common_packages:
+  - sudo
+  - curl
+  - wget
+  - vim
+  - gnupg
+  - ca-certificates
+  - qemu-guest-agent
+
+# Proxmox cluster
+pve_cluster_name: "pve-linstor"
+pve_cluster_master: "pve-linstor01"
+pve_cluster_master_ip: "192.168.56.221"
+pve_join_node: "pve-linstor02"
+pve_join_node_ip: "192.168.56.222"
+
+# Lab only. Later, move this to Ansible Vault.
+pve_root_password: "CHANGE_ME"
+
+# qdevice / qnetd
+qdevice_host: "qnetd01"
+qdevice_ip: "192.168.56.223"
+
+# LINBIT / LINSTOR
+linstor_controller_node: "pve-linstor01"
+linstor_controller_ip: "192.168.56.221"
+
+# Backing disk for LINSTOR storage pool
+linstor_backing_device: "/dev/sdb"
+linstor_vg_name: "vg_linstor"
+linstor_thinpool_name: "thin_linstor"
+linstor_storage_pool_name: "pve-linstor-pool"
+
+# Proxmox LINSTOR storage
+pve_linstor_storage_id: "linstor-drbd"
+pve_linstor_resource_group: "pve-rg"
+pve_linstor_content: "images,rootdir"
+
+# LINSTOR nodes
+linstor_nodes:
+  - name: "pve-linstor01"
+    ip: "192.168.56.221"
+    type: "Combined"
+  - name: "pve-linstor02"
+    ip: "192.168.56.222"
+    type: "Satellite"

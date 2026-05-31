@@ -1,0 +1,27 @@
+# Local inventory and variables
+inventory.ini
+group_vars/all.yml
+
+# Ansible runtime
+*.retry
+.retry/
+
+# Secrets
+*.vault
+vault.yml
+.vault_pass
+vault_pass.txt
+*.key
+*.pem
+id_rsa
+id_ed25519
+
+# Logs / temporary files
+*.log
+tmp/
+.cache/
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store

@@ -1,0 +1,27 @@
+---
+- name: Disable Proxmox enterprise repository
+  ansible.builtin.replace:
+    path: /etc/apt/sources.list.d/pve-enterprise.list
+    regexp: '^deb https://enterprise\.proxmox\.com/debian/pve'
+    replace: '# deb https://enterprise.proxmox.com/debian/pve'
+  ignore_errors: true
+
+- name: Disable Ceph enterprise repository if exists
+  ansible.builtin.replace:
+    path: /etc/apt/sources.list.d/ceph.list
+    regexp: '^deb https://enterprise\.proxmox\.com/debian/ceph-.*'
+    replace: '# deb https://enterprise.proxmox.com/debian/ceph-disabled'
+  ignore_errors: true
+
+- name: Add Proxmox no-subscription repository
+  ansible.builtin.copy:
+    dest: /etc/apt/sources.list.d/pve-no-subscription.list
+    content: |
+      {{ pve_no_subscription_repo }}
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Update apt cache after Proxmox repo change
+  ansible.builtin.apt:
+    update_cache: true

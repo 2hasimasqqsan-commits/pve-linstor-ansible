@@ -1,0 +1,51 @@
+---
+- name: Common setup for all nodes
+  hosts: all
+  roles:
+    - common
+
+- name: Configure Proxmox repositories
+  hosts: pve_nodes
+  roles:
+    - pve_repo
+
+- name: Configure Proxmox cluster
+  hosts: pve_nodes
+  serial: 1
+  roles:
+    - pve_cluster
+
+- name: Configure qdevice
+  hosts: all
+  roles:
+    - qdevice
+
+- name: Configure LINBIT repository
+  hosts: pve_nodes
+  roles:
+    - linbit_repo
+
+- name: Install LINSTOR and DRBD
+  hosts: pve_nodes
+  roles:
+    - linstor
+
+- name: Configure LINSTOR cluster
+  hosts: pve_nodes
+  roles:
+    - linstor_cluster
+
+- name: Configure LINSTOR storage pools
+  hosts: pve_nodes
+  roles:
+    - linstor_storage
+
+- name: Register LINSTOR storage in Proxmox
+  hosts: pve_nodes
+  roles:
+    - pve_linstor_storage
+
+- name: Verify basic status
+  hosts: all
+  roles:
+    - verify

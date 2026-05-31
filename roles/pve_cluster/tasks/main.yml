@@ -1,0 +1,87 @@
+---
+- name: Install python3-pexpect on join node
+  ansible.builtin.apt:
+    name: python3-pexpect
+    state: present
+    update_cache: true
+  when: inventory_hostname == pve_join_node
+
+- name: Check corosync config exists
+  ansible.builtin.stat:
+    path: /etc/pve/corosync.conf
+  register: corosync_conf
+
+- name: Check current pvecm status
+  ansible.builtin.command: pvecm status
+  register: pvecm_status_before
+  changed_when: false
+  failed_when: false
+
+- name: Show current cluster state
+  ansible.builtin.debug:
+    msg:
+      - "host={{ inventory_hostname }}"
+      - "corosync_conf_exists={{ corosync_conf.stat.exists }}"
+      - "pvecm_status_rc={{ pvecm_status_before.rc }}"
+
+- name: Create Proxmox cluster on master node
+  ansible.builtin.command: "pvecm create {{ pve_cluster_name }}"
+  register: pvecm_create_result
+  when:
+    - inventory_hostname == pve_cluster_master
+    - not corosync_conf.stat.exists
+
+- name: Wait for cluster filesystem on master
+  ansible.builtin.wait_for:
+    path: /etc/pve/corosync.conf
+    state: present
+    timeout: 120
+  when: inventory_hostname == pve_cluster_master
+
+- name: Re-check corosync config after possible cluster create
+  ansible.builtin.stat:
+    path: /etc/pve/corosync.conf
+  register: corosync_conf_after_create
+
+- name: Join second node to Proxmox cluster
+  ansible.builtin.expect:
+    command: "pvecm add {{ pve_cluster_master_ip }}"
+    responses:
+      "(?i)are you sure you want to continue connecting.*": "yes"
+      "(?i)continue connecting.*": "yes"
+      "(?i)fingerprint.*": "yes"
+      "(?i)do you want to continue.*": "yes"
+      "(?i)password.*": "{{ pve_root_password }}"
+    timeout: 300
+  register: pvecm_add_result
+  no_log: true
+  when:
+    - inventory_hostname == pve_join_node
+    - not corosync_conf_after_create.stat.exists
+
+- name: Wait for cluster filesystem on join node
+  ansible.builtin.wait_for:
+    path: /etc/pve/corosync.conf
+    state: present
+    timeout: 300
+  when:
+    - inventory_hostname == pve_join_node
+    - not corosync_conf_after_create.stat.exists
+
+- name: Final pvecm status
+  ansible.builtin.command: pvecm status
+  register: pvecm_status_after
+  changed_when: false
+
+- name: Show final pvecm status
+  ansible.builtin.debug:
+    var: pvecm_status_after.stdout_lines
+
+- name: Show pvecm nodes
+  ansible.builtin.command: pvecm nodes
+  register: pvecm_nodes_after
+  changed_when: false
+
+- name: Print pvecm nodes
+  ansible.builtin.debug:
+    var: pvecm_nodes_after.stdout_lines

@@ -1,0 +1,105 @@
+---
+- name: Check current LINSTOR resource groups
+  ansible.builtin.command: linstor resource-group list
+  register: linstor_rg_list_before
+  changed_when: false
+  when: inventory_hostname == linstor_controller_node
+
+- name: Create LINSTOR resource group for Proxmox
+  ansible.builtin.command: >
+    linstor resource-group create
+    {{ pve_linstor_resource_group }}
+    --storage-pool {{ linstor_storage_pool_name }}
+    --place-count 2
+  register: linstor_rg_create
+  changed_when: "'already exists' not in linstor_rg_create.stdout and 'already exists' not in linstor_rg_create.stderr"
+  failed_when:
+    - linstor_rg_create.rc != 0
+    - "'already exists' not in linstor_rg_create.stderr"
+    - "'already exists' not in linstor_rg_create.stdout"
+  when:
+    - inventory_hostname == linstor_controller_node
+    - pve_linstor_resource_group not in linstor_rg_list_before.stdout
+
+- name: Check if VolumeNr 0 already exists
+  ansible.builtin.shell: >
+    linstor volume-group list {{ pve_linstor_resource_group }}
+    | grep -E '^\|[[:space:]]*0[[:space:]]*\|'
+  register: linstor_vg0_check
+  changed_when: false
+  failed_when: false
+  when: inventory_hostname == linstor_controller_node
+
+- name: Create LINSTOR volume group 0 for Proxmox resource group
+  ansible.builtin.command: >
+    linstor volume-group create
+    {{ pve_linstor_resource_group }}
+  register: linstor_vg_create
+  changed_when: true
+  failed_when:
+    - linstor_vg_create.rc != 0
+    - "'already exists' not in linstor_vg_create.stderr"
+    - "'already exists' not in linstor_vg_create.stdout"
+  when:
+    - inventory_hostname == linstor_controller_node
+    - linstor_vg0_check.rc != 0
+
+- name: Show final LINSTOR resource group list
+  ansible.builtin.command: linstor resource-group list
+  register: linstor_rg_list_after
+  changed_when: false
+  when: inventory_hostname == linstor_controller_node
+
+- name: Print LINSTOR resource group list
+  ansible.builtin.debug:
+    var: linstor_rg_list_after.stdout_lines
+  when: inventory_hostname == linstor_controller_node
+
+- name: Show final LINSTOR volume group list
+  ansible.builtin.command: "linstor volume-group list {{ pve_linstor_resource_group }}"
+  register: linstor_vg_list_after
+  changed_when: false
+  failed_when: false
+  when: inventory_hostname == linstor_controller_node
+
+- name: Print LINSTOR volume group list
+  ansible.builtin.debug:
+    var: linstor_vg_list_after.stdout_lines
+  when: inventory_hostname == linstor_controller_node
+
+- name: Register LINSTOR storage in Proxmox storage.cfg
+  ansible.builtin.blockinfile:
+    path: /etc/pve/storage.cfg
+    marker: "# {mark} ANSIBLE MANAGED LINSTOR STORAGE"
+    block: |
+
+      drbd: {{ pve_linstor_storage_id }}
+              content {{ pve_linstor_content }}
+              controller {{ linstor_controller_ip }}
+              resourcegroup {{ pve_linstor_resource_group }}
+  run_once: true
+  delegate_to: "{{ pve_cluster_master }}"
+  when: inventory_hostname == pve_cluster_master
+
+- name: Show Proxmox storage.cfg
+  ansible.builtin.command: cat /etc/pve/storage.cfg
+  register: pve_storage_cfg
+  changed_when: false
+  when: inventory_hostname == pve_cluster_master
+
+- name: Print Proxmox storage.cfg
+  ansible.builtin.debug:
+    var: pve_storage_cfg.stdout_lines
+  when: inventory_hostname == pve_cluster_master
+
+- name: Check Proxmox storage status
+  ansible.builtin.command: pvesm status
+  register: pvesm_status
+  changed_when: false
+  failed_when: false
+  when: inventory_hostname == pve_cluster_master
+
+- name: Print Proxmox storage status
+  ansible.builtin.debug:
+    var: pvesm_status.stdout_lines
+  when: inventory_hostname == pve_cluster_master

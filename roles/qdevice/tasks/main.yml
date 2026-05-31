@@ -1,0 +1,90 @@
+---
+- name: Install corosync-qnetd on qdevice host
+  ansible.builtin.apt:
+    name:
+      - corosync-qnetd
+    state: present
+    update_cache: true
+  when: inventory_hostname in groups['qdevice']
+
+- name: Enable and start corosync-qnetd
+  ansible.builtin.systemd:
+    name: corosync-qnetd
+    enabled: true
+    state: started
+  when: inventory_hostname in groups['qdevice']
+
+- name: Install corosync-qdevice on Proxmox nodes
+  ansible.builtin.apt:
+    name:
+      - corosync-qdevice
+    state: present
+    update_cache: true
+  when: inventory_hostname in groups['pve_nodes']
+
+- name: Check current pvecm status on Proxmox master
+  ansible.builtin.command: pvecm status
+  register: pvecm_status_before_qdevice
+  changed_when: false
+  failed_when: false
+  when: inventory_hostname == pve_cluster_master
+
+- name: Show qdevice state before setup
+  ansible.builtin.debug:
+    msg:
+      - "host={{ inventory_hostname }}"
+      - "qdevice_configured={{ 'Qdevice' in pvecm_status_before_qdevice.stdout }}"
+  when: inventory_hostname == pve_cluster_master
+
+# 初回セットアップは root SSH 対話が絡むため、原則は手動実行推奨。
+# すでにQdeviceが入っていれば何もしない。
+- name: Setup qdevice from Proxmox master if not configured
+  ansible.builtin.command: "pvecm qdevice setup {{ qdevice_ip }}"
+  register: qdevice_setup_result
+  when:
+    - inventory_hostname == pve_cluster_master
+    - "'Qdevice' not in pvecm_status_before_qdevice.stdout"
+  changed_when: true
+
+- name: Wait a few seconds after qdevice setup
+  ansible.builtin.pause:
+    seconds: 10
+  when:
+    - inventory_hostname == pve_cluster_master
+    - qdevice_setup_result is defined
+    - qdevice_setup_result.changed | default(false)
+
+- name: Final pvecm status on Proxmox nodes
+  ansible.builtin.command: pvecm status
+  register: pvecm_status_after_qdevice
+  changed_when: false
+  when: inventory_hostname in groups['pve_nodes']
+
+- name: Show final pvecm status after qdevice
+  ansible.builtin.debug:
+    var: pvecm_status_after_qdevice.stdout_lines
+  when: inventory_hostname in groups['pve_nodes']
+
+- name: Check corosync-qdevice service on Proxmox nodes
+  ansible.builtin.command: systemctl is-active corosync-qdevice
+  register: qdevice_service_status
+  changed_when: false
+  failed_when: false
+  when: inventory_hostname in groups['pve_nodes']
+
+- name: Show corosync-qdevice service status
+  ansible.builtin.debug:
+    msg: "{{ inventory_hostname }} corosync-qdevice={{ qdevice_service_status.stdout }}"
+  when: inventory_hostname in groups['pve_nodes']
+
+- name: Check corosync-qnetd service on qdevice host
+  ansible.builtin.command: systemctl is-active corosync-qnetd
+  register: qnetd_service_status
+  changed_when: false
+  failed_when: false
+  when: inventory_hostname in groups['qdevice']
+
+- name: Show corosync-qnetd service status
+  ansible.builtin.debug:
+    msg: "{{ inventory_hostname }} corosync-qnetd={{ qnetd_service_status.stdout }}"
+  when: inventory_hostname in groups['qdevice']

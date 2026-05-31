@@ -1,0 +1,120 @@
+---
+- name: Install LVM tools on Proxmox nodes
+  ansible.builtin.apt:
+    name:
+      - lvm2
+    state: present
+    update_cache: true
+  when: inventory_hostname in groups['pve_nodes']
+
+- name: Show target backing device
+  ansible.builtin.debug:
+    msg: "{{ inventory_hostname }} will use {{ linstor_backing_device }} for LINSTOR storage"
+  when: inventory_hostname in groups['pve_nodes']
+
+- name: Check backing device exists
+  ansible.builtin.stat:
+    path: "{{ linstor_backing_device }}"
+  register: backing_device_stat
+  when: inventory_hostname in groups['pve_nodes']
+
+- name: Fail if backing device does not exist
+  ansible.builtin.fail:
+    msg: "{{ linstor_backing_device }} does not exist on {{ inventory_hostname }}"
+  when:
+    - inventory_hostname in groups['pve_nodes']
+    - not backing_device_stat.stat.exists
+
+- name: Check if VG already exists
+  ansible.builtin.command: "vgs {{ linstor_vg_name }}"
+  register: vg_check
+  changed_when: false
+  failed_when: false
+  when: inventory_hostname in groups['pve_nodes']
+
+- name: Show existing block signatures on backing device
+  ansible.builtin.command: "wipefs -n {{ linstor_backing_device }}"
+  register: wipefs_check
+  changed_when: false
+  failed_when: false
+  when: inventory_hostname in groups['pve_nodes']
+
+- name: Print backing device signatures
+  ansible.builtin.debug:
+    var: wipefs_check.stdout_lines
+  when: inventory_hostname in groups['pve_nodes']
+
+- name: Wipe filesystem signatures on backing device if VG does not exist
+  ansible.builtin.command: "wipefs -a {{ linstor_backing_device }}"
+  when:
+    - inventory_hostname in groups['pve_nodes']
+    - vg_check.rc != 0
+
+- name: Create physical volume if VG does not exist
+  ansible.builtin.command: "pvcreate {{ linstor_backing_device }}"
+  when:
+    - inventory_hostname in groups['pve_nodes']
+    - vg_check.rc != 0
+
+- name: Create volume group if not exists
+  ansible.builtin.command: "vgcreate {{ linstor_vg_name }} {{ linstor_backing_device }}"
+  when:
+    - inventory_hostname in groups['pve_nodes']
+    - vg_check.rc != 0
+
+- name: Check if thin pool already exists
+  ansible.builtin.command: "lvs {{ linstor_vg_name }}/{{ linstor_thinpool_name }}"
+  register: thinpool_check
+  changed_when: false
+  failed_when: false
+  when: inventory_hostname in groups['pve_nodes']
+
+- name: Create LVM thin pool for LINSTOR
+  ansible.builtin.command: "lvcreate -l 95%FREE --thinpool {{ linstor_thinpool_name }} {{ linstor_vg_name }}"
+  when:
+    - inventory_hostname in groups['pve_nodes']
+    - thinpool_check.rc != 0
+
+- name: Show LVM status
+  ansible.builtin.shell: "pvs; vgs; lvs"
+  register: lvm_status
+  changed_when: false
+  when: inventory_hostname in groups['pve_nodes']
+
+- name: Print LVM status
+  ansible.builtin.debug:
+    var: lvm_status.stdout_lines
+  when: inventory_hostname in groups['pve_nodes']
+
+- name: Check current LINSTOR storage pools
+  ansible.builtin.command: linstor storage-pool list
+  register: linstor_sp_list_before
+  changed_when: false
+  when: inventory_hostname == linstor_controller_node
+
+- name: Create LINSTOR LVM thin storage pools
+  ansible.builtin.command: >
+    linstor storage-pool create lvmthin
+    {{ item.name }}
+    {{ linstor_storage_pool_name }}
+    {{ linstor_vg_name }}/{{ linstor_thinpool_name }}
+  loop: "{{ linstor_nodes }}"
+  register: linstor_sp_create
+  changed_when: "'already exists' not in linstor_sp_create.stdout and 'already exists' not in linstor_sp_create.stderr"
+  failed_when:
+    - linstor_sp_create.rc != 0
+    - "'already exists' not in linstor_sp_create.stderr"
+    - "'already exists' not in linstor_sp_create.stdout"
+  when:
+    - inventory_hostname == linstor_controller_node
+
+- name: Show final LINSTOR storage pools
+  ansible.builtin.command: linstor storage-pool list
+  register: linstor_sp_list_after
+  changed_when: false
+  when: inventory_hostname == linstor_controller_node
+
+- name: Print final LINSTOR storage pools
+  ansible.builtin.debug:
+    var: linstor_sp_list_after.stdout_lines
+  when: inventory_hostname == linstor_controller_node

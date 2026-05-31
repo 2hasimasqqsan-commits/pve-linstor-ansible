@@ -1,0 +1,45 @@
+---
+- name: Wait for LINSTOR controller API
+  ansible.builtin.command: linstor node list
+  register: linstor_api_check
+  changed_when: false
+  retries: 10
+  delay: 5
+  until: linstor_api_check.rc == 0
+  when: inventory_hostname == linstor_controller_node
+
+- name: Show current LINSTOR node list before registration
+  ansible.builtin.command: linstor node list
+  register: linstor_node_list_before
+  changed_when: false
+  when: inventory_hostname == linstor_controller_node
+
+- name: Print current LINSTOR node list before registration
+  ansible.builtin.debug:
+    var: linstor_node_list_before.stdout_lines
+  when: inventory_hostname == linstor_controller_node
+
+- name: Register LINSTOR nodes
+  ansible.builtin.command: >
+    linstor node create {{ item.name }} {{ item.ip }} --node-type {{ item.type }}
+  loop: "{{ linstor_nodes }}"
+  register: linstor_node_create_result
+  changed_when: true
+  failed_when:
+    - linstor_node_create_result.rc != 0
+    - "'already exists' not in linstor_node_create_result.stderr"
+    - "'already exists' not in linstor_node_create_result.stdout"
+  when:
+    - inventory_hostname == linstor_controller_node
+    - item.name not in linstor_node_list_before.stdout
+
+- name: Show final LINSTOR node list
+  ansible.builtin.command: linstor node list
+  register: linstor_node_list_after
+  changed_when: false
+  when: inventory_hostname == linstor_controller_node
+
+- name: Print final LINSTOR node list
+  ansible.builtin.debug:
+    var: linstor_node_list_after.stdout_lines
+  when: inventory_hostname == linstor_controller_node

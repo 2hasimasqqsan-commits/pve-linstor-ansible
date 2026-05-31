@@ -1,0 +1,44 @@
+---
+- name: Ensure keyrings directory exists
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+  when: inventory_hostname in groups['pve_nodes']
+
+- name: Download LINBIT package signing key
+  ansible.builtin.get_url:
+    url: https://packages.linbit.com/package-signing-pubkey.asc
+    dest: /etc/apt/keyrings/linbit.asc
+    owner: root
+    group: root
+    mode: '0644'
+  when: inventory_hostname in groups['pve_nodes']
+
+- name: Add LINBIT public Proxmox repository
+  ansible.builtin.copy:
+    dest: /etc/apt/sources.list.d/linbit.list
+    owner: root
+    group: root
+    mode: '0644'
+    content: |
+      deb [signed-by=/etc/apt/keyrings/linbit.asc] http://packages.linbit.com/public/ proxmox-8 drbd-9
+  when: inventory_hostname in groups['pve_nodes']
+
+- name: Update apt cache after adding LINBIT public repository
+  ansible.builtin.apt:
+    update_cache: true
+  when: inventory_hostname in groups['pve_nodes']
+
+- name: Check package candidates for LINSTOR/DRBD
+  ansible.builtin.command: apt-cache policy linstor-controller linstor-satellite linstor-client linstor-proxmox drbd-utils proxmox-default-headers
+  register: linstor_pkg_policy
+  changed_when: false
+  when: inventory_hostname in groups['pve_nodes']
+
+- name: Show package candidates for LINSTOR/DRBD
+  ansible.builtin.debug:
+    var: linstor_pkg_policy.stdout_lines
+  when: inventory_hostname in groups['pve_nodes']

@@ -1,0 +1,25 @@
+---
+- name: Show hostname
+  ansible.builtin.command: hostname
+  register: hostname_result
+  changed_when: false
+
+- name: Print hostname
+  ansible.builtin.debug:
+    msg: "{{ inventory_hostname }} hostname={{ hostname_result.stdout }}"
+
+- name: Show IP address
+  ansible.builtin.command: hostname -I
+  register: ip_result
+  changed_when: false
+
+- name: Print IP address
+  ansible.builtin.debug:
+    msg: "{{ inventory_hostname }} ip={{ ip_result.stdout }}"
+
+- name: Check ping to cluster nodes
+  ansible.builtin.command: "ping -c 2 {{ item.ip }}"
+  loop: "{{ pve_nodes }}"
+  loop_control:
+    label: "{{ item.name }} {{ item.ip }}"
+  changed_when: false
