@@ -151,7 +151,7 @@ For security reasons, IP addresses, hostnames, usernames, URLs, and environment-
 
 ### Proxmox VE Cluster GUI
 
-
+![proxmox-ve-cluster](docs/images/proxmox-cluster-gui.png)
 
 
 This screenshot shows the Proxmox VE lab environment with the LINSTOR/DRBD cluster nodes and the QDevice node.
@@ -164,6 +164,7 @@ The lab consists of:
 
 ### QDevice / Quorum Status
 
+![pvecm-status-qdevice](docs/images/pvecm-status-qdevice.png)
 
 This verification shows the Proxmox VE cluster quorum status.
 
@@ -176,6 +177,7 @@ The output confirms:
 
 ### LINSTOR Resource List
 
+![linstor-resource-list](docs/images/linstor-resource-list.png)
 
 This verification shows LINSTOR-managed resources across the Proxmox VE nodes.
 
@@ -188,6 +190,7 @@ The output confirms:
 
 ### DRBD Status
 
+![drbd-status](docs/images/drbd-status.png)
 
 This verification shows DRBD replication status.
 
@@ -200,6 +203,7 @@ The output confirms:
 
 ### Proxmox VE HA Manager Status
 
+![ha-manager-status](docs/images/ha-manager-status.png)
 
 This verification shows the Proxmox VE HA manager status.
 
@@ -212,6 +216,7 @@ The output confirms:
 
 ### Proxmox VE LINSTOR Storage Integration
 
+![proxmox-linstor-storage](docs/images/proxmox-linstor-storage.png)
 
 This screenshot shows LINSTOR-backed storage integrated into the Proxmox VE environment.
 
