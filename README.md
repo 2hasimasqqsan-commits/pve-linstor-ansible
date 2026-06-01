@@ -224,6 +224,8 @@ The storage view confirms that linstor-drbd is available as a Proxmox VE storage
 
 ### Auto Failover Demo Video
 
+![Auto failover test](docs/images/auto-failover-test.png)
+
 A recorded auto failover demo video is available below.
 
 For security reasons, IP addresses, hostnames, URLs, and environment-specific values may be masked in the video.
