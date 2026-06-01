@@ -145,18 +145,77 @@ pvesm status
 
 ## Screenshots / Verification
 
-Screenshots and verification results will be added later.
+This section shows verification results for the Proxmox VE LINSTOR / DRBD lab environment.
 
-Planned verification materials:
+For security reasons, IP addresses, hostnames, usernames, URLs, and environment-specific values may be masked in the screenshots.
 
-- Proxmox VE cluster GUI
-- Proxmox VE HA status
-- LINSTOR resource list
-- DRBD Primary / Secondary status
-- QDevice quorum status
-- VM disk running on LINSTOR-backed storage
-- Auto failover test screenshots
-- Auto failover demo video
+### Proxmox VE Cluster GUI
+
+
+
+
+This screenshot shows the Proxmox VE lab environment with the LINSTOR/DRBD cluster nodes and the QDevice node.
+
+The lab consists of:
+
+- pve-linstor01
+- pve-linstor02
+- qnetd01
+
+### QDevice / Quorum Status
+
+
+This verification shows the Proxmox VE cluster quorum status.
+
+The output confirms:
+
+- The cluster is quorate
+- Two Proxmox VE nodes are configured
+- QDevice is used for quorum support
+- Expected votes and total votes are available
+
+### LINSTOR Resource List
+
+
+This verification shows LINSTOR-managed resources across the Proxmox VE nodes.
+
+The output confirms:
+
+- LINSTOR resources exist on both nodes
+- DRBD/STORAGE layers are used
+- Resource connections are healthy
+- Resource state is UpToDate
+
+### DRBD Status
+
+
+This verification shows DRBD replication status.
+
+The output confirms:
+
+- Primary / Secondary role assignment
+- UpToDate disk status
+- UpToDate peer disk status
+- DRBD-backed storage replication between nodes
+
+### Proxmox VE HA Manager Status
+
+
+This verification shows the Proxmox VE HA manager status.
+
+The output confirms:
+
+- Cluster quorum is OK
+- HA manager is active
+- A test VM is managed as an HA service
+- The HA service is started on a Proxmox VE node
+
+### Proxmox VE LINSTOR Storage Integration
+
+
+This screenshot shows LINSTOR-backed storage integrated into the Proxmox VE environment.
+
+The storage view confirms that linstor-drbd is available as a Proxmox VE storage backend and can be used for VM disk placement.
 
 ## Security Notes
 
