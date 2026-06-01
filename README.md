@@ -222,6 +222,22 @@ This screenshot shows LINSTOR-backed storage integrated into the Proxmox VE envi
 
 The storage view confirms that linstor-drbd is available as a Proxmox VE storage backend and can be used for VM disk placement.
 
+### Auto Failover Demo Video
+
+A recorded auto failover demo video is available below.
+
+For security reasons, IP addresses, hostnames, URLs, and environment-specific values may be masked in the video.
+
+[Watch LINSTOR auto failover demo video](https://drive.google.com/file/d/1UVUVvpr2-nspy3vzeXHvu2HdyvKpbeK-/view?usp=sharing)
+
+The demo verifies:
+
+- Proxmox VE HA service behavior
+- VM restart or failover handling
+- LINSTOR / DRBD-backed storage availability
+- DRBD Primary / Secondary role behavior
+- Cluster quorum status during the verification
+
 ## Security Notes
 
 Do not publish real environment values.
